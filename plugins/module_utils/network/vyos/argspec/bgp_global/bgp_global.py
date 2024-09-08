@@ -111,6 +111,7 @@ class Bgp_globalArgs(object):  # pylint: disable=R0903
                     "elements": "dict",
                     "options": {
                         "shutdown": {"type": "bool"},
+                        "solo": {"type": "bool"},
                         "weight": {"type": "int"},
                         "default_originate": {"type": "str"},
                         "peer_group_name": {"type": "str"},

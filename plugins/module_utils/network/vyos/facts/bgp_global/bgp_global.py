@@ -22,10 +22,6 @@ from ansible_collections.ansible.netcommon.plugins.module_utils.network.common i
 from ansible_collections.vyos.vyos.plugins.module_utils.network.vyos.argspec.bgp_global.bgp_global import (
     Bgp_globalArgs,
 )
-from ansible_collections.vyos.vyos.plugins.module_utils.network.vyos.rm_templates.bgp_global import (
-    Bgp_globalTemplate,
-)
-
 
 class Bgp_globalFacts(object):
     """The vyos bgp_global facts class"""
@@ -47,6 +43,7 @@ class Bgp_globalFacts(object):
         :rtype: dictionary
         :returns: facts
         """
+        version = self._get_os_version(connection)
         facts = {}
         objs = {}
         config_lines = []
@@ -58,6 +55,10 @@ class Bgp_globalFacts(object):
             if "address-family" not in resource:
                 config_lines.append(re.sub("'", "", resource))
 
+        if version >= "1.4":
+            from ansible_collections.vyos.vyos.plugins.module_utils.network.vyos.rm_templates.bgp_global_14 import ( Bgp_globalTemplate)
+        else:
+            from ansible_collections.vyos.vyos.plugins.module_utils.network.vyos.rm_templates.bgp_global import ( Bgp_globalTemplate )
         bgp_global_parser = Bgp_globalTemplate(lines=config_lines, module=self._module)
         objs = bgp_global_parser.parse()
 
@@ -79,3 +80,12 @@ class Bgp_globalFacts(object):
         ansible_facts["ansible_network_resources"].update(facts)
 
         return ansible_facts
+
+    def _get_os_version(self, connection):
+        """
+        Get the base version number before the '-' in the version string.
+        """
+        os_version = "1.2"
+        if connection:
+            os_version = connection.get_device_info()["network_os_major_version"]
+        return os_version

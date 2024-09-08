@@ -22,9 +22,7 @@ from ansible_collections.ansible.netcommon.plugins.module_utils.network.common i
 from ansible_collections.vyos.vyos.plugins.module_utils.network.vyos.argspec.bgp_address_family.bgp_address_family import (
     Bgp_address_familyArgs,
 )
-from ansible_collections.vyos.vyos.plugins.module_utils.network.vyos.rm_templates.bgp_address_family import (
-    Bgp_address_familyTemplate,
-)
+
 
 
 class Bgp_address_familyFacts(object):
@@ -58,6 +56,13 @@ class Bgp_address_familyFacts(object):
             if "address-family" in resource:
                 config_lines.append(re.sub("'", "", resource))
 
+        version = self._get_os_version(connection)
+
+        if version >= "1.4":
+            from ansible_collections.vyos.vyos.plugins.module_utils.network.vyos.rm_templates.bgp_address_family_14 import ( Bgp_address_familyTemplate )
+        else:
+            from ansible_collections.vyos.vyos.plugins.module_utils.network.vyos.rm_templates.bgp_address_family import ( Bgp_address_familyTemplate ) 
+
         # parse native config using the Bgp_address_family template
         bgp_address_family_parser = Bgp_address_familyTemplate(lines=config_lines)
         objs = bgp_address_family_parser.parse()
@@ -87,3 +92,12 @@ class Bgp_address_familyFacts(object):
         ansible_facts["ansible_network_resources"].update(facts)
 
         return ansible_facts
+
+    def _get_os_version(self, connection):
+        """
+        Get the base version number before the '-' in the version string.
+        """
+        os_version = "1.2"
+        if connection:
+            os_version = connection.get_device_info()["network_os_major_version"]
+        return os_version
